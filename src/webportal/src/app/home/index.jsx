@@ -21,6 +21,7 @@ import 'whatwg-fetch';
 
 import {FontClassNames} from '@uifabric/styling';
 import c from 'classnames';
+import {isEmpty} from 'lodash';
 import {initializeIcons} from 'office-ui-fabric-react';
 import React, {useState, useCallback} from 'react';
 import ReactDOM from 'react-dom';
@@ -33,7 +34,13 @@ import {checkToken} from '../user/user-auth/user-auth.component';
 
 import t from 'tachyons-sass/tachyons.scss';
 
-const loginTarget = '/home.html';
+let loginTarget = '/home.html';
+
+const url = new URL(window.location.href);
+const from = url.searchParams.get('from');
+if (!isEmpty(from)) {
+  loginTarget = from;
+}
 
 if (checkToken(false)) {
   window.location.replace(loginTarget);
