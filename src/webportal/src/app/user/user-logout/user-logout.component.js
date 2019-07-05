@@ -17,12 +17,16 @@
 
 const querystring = require('querystring');
 
-const userLogout = () => {
+const userLogout = (origin = window.location.href) => {
   cookies.remove('user');
   cookies.remove('token');
   cookies.remove('admin');
   cookies.remove('my-jobs');
-  window.location.replace(`/index.html?${querystring.stringify({from: window.location.href})}`);
+  if (!origin) {
+    window.location.replace('/index.html');
+  } else {
+    window.location.replace(`/index.html?${querystring.stringify({from: origin})}`);
+  }
 };
 
 module.exports = {userLogout};
