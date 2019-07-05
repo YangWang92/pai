@@ -96,38 +96,46 @@ const update = (req, res, next) => {
  */
 const addVCAndAddGroupAsync = async (req, res, next) => {
   try {
+    let methodType = 'update';
     if (!req.user.admin) {
       return next(createError('Forbidden', 'ForbiddenUserError', `Non-admin is not allowed to do this operation.`));
     }
-    if (req.params.vcName === authConfig.groupConfig.adminGroup.groupname) {
-      return next(createError('Forbidden', 'ForbiddenUserError', `The name '${req.params.vcName}' is occupied by admin group.`));
-    }
     try {
-      await groupModel.getGroup(req.params.vcName);
-      return next(createError('Conflict', 'ConflictVcError', `Name ${req.body.username} already exists.`));
+      const groupInfo = await groupModel.getGroup(req.params.vcName);
+      if ( !groupInfo.extension.groupType || groupInfo.extension.groupType !== 'vc' ) {
+        return next(createError('Conflict', 'ConflictVcError', `Name ${req.body.username} already exists.`));
+      }
     } catch (error) {
       if (error.status !== 404) {
         return next(createError.unknown((error)));
+      } else {
+        methodType = 'create';
       }
     }
     const vcName = req.params.vcName;
     const vcCapacity = parseInt(req.body.vcCapacity);
     const vcMaxCapacity = req.body.vcMaxCapacity ? parseInt(req.body.vcMaxCapacity) : vcCapacity;
     await util.promisify(VirtualCluster.prototype.updateVc).apply(VirtualCluster.prototype, [vcName, vcCapacity, vcMaxCapacity]);
-    const groupname = req.params.vcName;
-    const extension = {'groupType': 'vc'};
-    const externalName = req.body.externalName;
-    const description = req.body.description;
-    const groupValue = {
-      groupname: groupname,
-      description: description,
-      externalName: externalName,
-      extension: extension,
-    };
-    await groupModel.createGroup(groupname, groupValue);
-    return res.status(201).json({
-      message: 'VC is created successfully',
-    });
+    if (methodType === 'update') {
+      return res.status(201).json({
+        message: `update vc: ${vcName} to capacity: ${vcCapacity} successfully`,
+      });
+    } else {
+      const groupname = req.params.vcName;
+      const extension = {'groupType': 'vc'};
+      const externalName = req.body.externalName;
+      const description = req.body.description;
+      const groupValue = {
+        groupname: groupname,
+        description: description,
+        externalName: externalName,
+        extension: extension,
+      };
+      await groupModel.createGroup(groupname, groupValue);
+      return res.status(201).json({
+        message: 'VC is created successfully',
+      });
+    }
   } catch (error) {
     return next(createError.unknown((error)));
   }
