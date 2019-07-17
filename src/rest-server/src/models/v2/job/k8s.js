@@ -181,7 +181,6 @@ const generateTaskRole = (taskRole, labels, config) => {
           },
           annotations: {
             'container.apparmor.security.beta.kubernetes.io/main': 'unconfined',
-            'hivedscheduler.microsoft.com/pod-scheduling-spec': yaml.safeDump(config.taskRoles[taskRole].hivedPodSpec),
           },
         },
         spec: {
@@ -227,24 +226,7 @@ const generateTaskRole = (taskRole, labels, config) => {
                   'nvidia.com/gpu': config.taskRoles[taskRole].resourcePerInstance.gpu,
                 },
               },
-              env: [
-                {
-                  name: 'NVIDIA_VISIBLE_DEVICES',
-                  valueFrom: {
-                    fieldRef: {
-                      fieldPath: `metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']`,
-                    },
-                  },
-                },
-                {
-                  name: 'GPU_ID',
-                  valueFrom: {
-                    fieldRef: {
-                      fieldPath: `metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']`,
-                    },
-                  },
-                },
-              ],
+              env: [],
               securityContext: {
                 capabilities: {
                   add: ['SYS_ADMIN', 'IPC_LOCK', 'DAC_READ_SEARCH'],
@@ -329,14 +311,6 @@ const generateTaskRole = (taskRole, labels, config) => {
     frameworkTaskRole.task.pod.spec.containers[0].env.push(
       {
         name: 'NVIDIA_VISIBLE_DEVICES',
-        valueFrom: {
-          fieldRef: {
-            fieldPath: `metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']`,
-          },
-        },
-      },
-      {
-        name: 'GPU_ID',
         valueFrom: {
           fieldRef: {
             fieldPath: `metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']`,
